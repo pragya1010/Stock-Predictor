@@ -1,0 +1,81 @@
+{% extends "bootstrap/base.html" %}
+{% block content %}
+
+<div class = "container">
+    <div class="jumbotron" style="background-color:#1daeff !important;">
+      <h2 style="color:#fff;">Stock Predictor</h2>
+    <p style="color:#fff;">Using Machine Learning</p>
+  </div>
+
+</div>
+
+
+
+	  <div id="first" style="width: 75%; height: 100%;  float:left;" >
+
+              <h2 style="color:#1daeff;align-content: center"> <i>{{suggestion_pro}}</i> </h2>
+			    <embed type="image/svg+xml" src={{graph_data|safe}} style='max-width:900px'/>
+
+
+	  </div>
+
+    <div id ="second" style="width: 25%; height: 100%; float:right;">
+            <h4 style="background-color:#1daeff;color:#fff;width:200px" >Prediction Results</h4>
+                {% for table in tables %}
+                    <p>{{table.Future_date }} {{table.Forecasted_Price}}</p>
+                    {{ table|safe }}
+                {% endfor %}
+        </div>
+</div>
+
+</div>
+
+
+
+	  <div id="first1" style="width: 75%; height: 100%;  float:left;" >
+          <h2 style="color:#1daeff;align-content: center"> <i>{{suggestion_svm}} </i> </h2>
+          <embed type="image/svg+xml" src={{graph_data_svm|safe}} style='max-width:900px'/>
+
+
+	  </div>
+
+    <div id ="second2" style="width: 25%; height: 100%; float:right;">
+            <h4 style="background-color:#1daeff;color:#fff;width:200px" >Prediction Results</h4>
+                {% for table in svm_table %}
+                    <p>{{table.date }} {{table.predicted}}</p>
+                    {{ table|safe }}
+                {% endfor %}
+        </div>
+</div>
+
+</div>
+
+
+
+	  <div id="first2" style="width: 75%; height: 100%;  float:left;" >
+
+          <embed type="image/svg+xml" src={{graph_data_linear|safe}} style='max-width:900px'/>
+
+
+	  </div>
+
+    <div id ="second3" style="width: 25%; height: 100%; float:right;">
+            <h4 style="background-color:#1daeff;color:#fff;width:200px" >Linear Results</h4>
+                {% for table in linear_table %}
+                    <p>{{table.date }} {{table.predicted}}</p>
+                    {{ table|safe }}
+                {% endfor %}
+        </div>
+</div>
+
+
+
+{% endblock %}
+
+
+{% block styles %}
+{{super()}} <!-- Allows Javascripts and other styles to be inclusive in bootstrap -->
+<link rel="stylesheet"
+      href="{{url_for('.static', filename='css/styles.css')}}">
+{% endblock %}
+
