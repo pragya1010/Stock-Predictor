@@ -62,7 +62,7 @@ def prophet_model(stockhistory,num_days):
     se = np.square(fore - actual_data)
     mse = np.mean(se)
     rmse = np.sqrt(mse)
-    print(rmse)
+    #print(rmse)
 
 
     date = future['ds']
@@ -104,13 +104,17 @@ def prophet_model(stockhistory,num_days):
     df['Future_date'] = df['Date_new'].dt.strftime('%Y-%m-%d')
     df = df[['Future_date', 'Forecasted_Price']]
     df.set_index('Future_date', inplace=True)
-    suggestion = "Buy" if df['Forecasted_Price'][0] > ending_stock_price else "Sell"
+    #suggestion = "Buy" if df['Forecasted_Price'][0] > ending_stock_price else "Sell"
+
+    next_price = df['Forecasted_Price'][0]
+    suggestion = "Buy" if ((next_price > ending_stock_price) and (next_price - ending_stock_price) > 1) else "Sell" \
+        if ((ending_stock_price > next_price) and (ending_stock_price - next_price) > 1) else "Hold"
 
     return graph_data, df, suggestion
 
 
-start = datetime.datetime(2010, 1, 1)
-end = datetime.datetime(2018, 10, 31)
+start = datetime.datetime(2018, 1, 1)
+end = datetime.datetime(2018, 11, 12)
 stockhistory = pdb.DataReader('AAPL', 'yahoo', start, end)
 
-graph, df1, prophet = prophet_model(stockhistory,5)
+graph, df1, prophet = prophet_model(stockhistory,1)

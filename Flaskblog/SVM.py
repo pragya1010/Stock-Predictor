@@ -94,10 +94,31 @@ def svm_model(stockhistory,num_days):
     graph.add('Actual data', svm['Close'])
     graph.add('Forecasted data', svm['predictions'])
     graph_data = graph.render_data_uri()
-    suggestion = "Buy" if svm_future['predictions'][0] > svm_original['Close'][len(svm_original) - 1] else "Sell"
-    print("Predicted " + str(svm_future['predictions'][0]))
-    print("Actual " + str(svm_original['Close'][len(svm_original) - 1]))
+    # suggestion = "Buy" if svm_future['predictions'][0] > svm_original['Close'][len(svm_original) - 1] else "Sell"
+    # print("Predicted " + str(svm_future['predictions'][0]))
+    # print("Actual " + str(svm_original['Close'][len(svm_original) - 1]))
+    # print(suggestion)
+
+    # Compute suggestion
+    next_price = svm_future['predictions'][0]
+    ending_stock_price = svm_original['Close'][len(svm_original) - 1]
+    suggestion = "Buy" if ((next_price > ending_stock_price) and (next_price - ending_stock_price) > 1) else "Sell" \
+        if ((ending_stock_price > next_price) and (ending_stock_price - next_price) > 1) else "Hold"
+    print(next_price)
+    print(ending_stock_price)
     print(suggestion)
+
+    plt.plot(svm.index, svm['Close'], color='red', label='Actual')
+    plt.plot(svm.index, svm['predictions'], color='blue', label='Forecasted')
+    plt.xlabel('Date')
+    plt.ylabel('Price')
+
+    #plt.title('SVM')
+    plt.legend()
+    plt.show()
+
+
+
     svm_future.index.names = ['Future_date']
 
     svm_future = svm_future.rename(columns={'Close':'Actual_Price', 'predictions':'Forecasted_Price'})
@@ -114,8 +135,8 @@ def svm_model(stockhistory,num_days):
 # plt.show()
 #
 start = datetime.datetime(2018, 1, 1)
-end = datetime.datetime(2018, 11, 2)
+end = datetime.datetime(2018, 11, 12)
 
-df = pdb.DataReader('GOOGL', 'yahoo', start, end)
-graph, svm, suggestion = svm_model(df,5)
-print(svm)
+df = pdb.DataReader('AAPL', 'yahoo', start, end)
+graph, svm, suggestion = svm_model(df,1)
+#print(svm)

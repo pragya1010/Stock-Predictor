@@ -53,8 +53,6 @@ def linear_regression(stockhistory, num_days):
     score = learner.score(X_test, Y_test)
     forecast = learner.predict(X)
     forecast_future = learner.predict(X_lately)
-    #print(forecast_future)
-
     ##### df - for original values prediction
     df['Forecast'] = 0.0
     for i in range(len(forecast)):
@@ -63,12 +61,11 @@ def linear_regression(stockhistory, num_days):
     df['Act_forecast'] = df['Forecast'].shift(forecast_out)
     df['Date'] = df.index
     #### df2 - for future value prediction
-    df2 = df[-forecast_out:].copy()
+    df2 = df[-forecast_out:]
     #print(df2)
-
     last_date = df2.index[-1]
-    #df2 = df[-forecast_out:]
-    #last_date = df2.index[-1]
+    df2 = df[-forecast_out:]
+    last_date = df2.index[-1]
     df2['future_date'] = last_date
 
     df2['future_preds'] = 0.0
@@ -80,48 +77,55 @@ def linear_regression(stockhistory, num_days):
         df2['future_preds'][i] = forecast_future[i]
 
     # print(forecast_future)
-    linear = df2[['future_date', 'Actual', 'future_preds']]
+    linear = df2[['future_date', 'Actual', 'future_preds']].reset_index(drop=True)
     linear = linear.rename(columns={'future_date': 'Date', 'Actual': 'Close', 'future_preds': 'Act_forecast'})
-    linear.reset_index(drop=True, inplace= True)
     #print(linear)
-    original = df[['Date', 'Close', 'Act_forecast']]
-    original.reset_index(drop=True, inplace=True)
+    original = df[['Date', 'Close', 'Act_forecast']].reset_index(drop=True)
     # print(original)
 
     final_df = original.append(linear, sort=True)
 
-    #calculate mean square error
+    # Suggest whether to buy stock or sell. if predicted value is greater for tomorrow then buy
+    suggestion = "Buy" if linear['Act_forecast'][0] > stockhistory['Close'][len(stockhistory)-1] else "Sell"
+    # next_price = linear['Act_forecast'][0]
+    # ending_stock_price = stockhistory['Close'][len(stockhistory) - 1]
+    # suggestion = "Buy" if ((next_price > ending_stock_price) and (next_price - ending_stock_price) > 1) else "Sell" \
+    #     if ((ending_stock_price > next_price) and (ending_stock_price - next_price) > 1) else "Hold"
+
+    # calculate mean square error
     error_df = final_df.dropna()
-    se = np.square(error_df['Close']-error_df['Act_forecast'])
-    mse = np.mean(se)
-    rmse = np.sqrt(mse)
-    print(rmse)
 
-    suggestion = "Buy" if linear['Act_forecast'][0]> stockhistory['Close'][0] else "Sell"
+    # graph = pygal.Line()
+    # graph.title = '%Linear Model%'
+    # graph.x_labels = final_df['Date']
+    # graph.add('Actual data', final_df['Close'])
+    # graph.add('Forecasted data', final_df['Act_forecast'])
+    # graph_data = graph.render_data_uri()
 
-    print(final_df)
-    graph = pygal.Line()
-    graph.title = '%Linear Model%'
-    graph.x_labels = final_df['Date']
-    graph.add('Actual data', final_df['Close'])
-    graph.add('Forecasted data', final_df['Act_forecast'])
-    graph_data = graph.render_data_uri()
+    df['Close'].plot(figsize=(15,6), color="red")
+    df['Act_forecast'].plot(figsize=(15,6), color="blue")
+    plt.legend(loc=4)
+    plt.xlabel('Date')
+    plt.ylabel('Price')
+    plt.show()
 
-    linear = linear.rename(columns={'Date':'Future_date','Act_forecast':'Forecasted_Price'})
+
+    #Refactoring for UI - part of integration
+    linear = linear.rename(columns={'Date': 'Future_date', 'Act_forecast': 'Forecasted_Price'})
     del linear['Close']
     linear.set_index('Future_date', inplace=True)
 
-    return graph_data, final_df[['Date', 'Act_forecast']], linear
+    return linear , suggestion, error_df
 
-start = datetime.datetime(2010, 1, 1)
-end = datetime.datetime(2018, 11, 2)
+start = datetime.datetime(2018, 1, 1)
+end = datetime.datetime(2018, 11, 12)
 stockhistory = pdb.DataReader('AAPL', 'yahoo', start, end)
 
-graph, df1, linear = linear_regression(stockhistory,5)
+df1, linear, error_df = linear_regression(stockhistory,1)
 #forecast_dates, first_day = get_forecast_dates()
 # print(df1)
 # print(stockhistory)
-print(linear)
+#print(linear)
 
 
 

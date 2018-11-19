@@ -1,6 +1,8 @@
 {% extends "bootstrap/base.html" %}
 {% block content %}
-<marquee><i>Stock Prediction is subjected to market risk</i></marquee>
+
+ <marquee><i>Stock Prediction is subjected to market risk</i></marquee>
+
 <div class = "container">
     <div class="jumbotron" style="background-color:#1daeff !important;">
       <h2 style="color:#fff;">Stock Predictor</h2>
@@ -15,7 +17,7 @@
 
 
     <form method="POST" action="{{ url_for('predict')}}">
-        <input type="text" name = "companyname" placeholder="Company tinker">
+        <input type="text" name = "companyname" placeholder="Company ticker">
         <input type="text" name = "num_days" placeholder="no. of days to predict..">
 
         <div>
@@ -30,15 +32,18 @@
 
 
 
+<div class="container" style="position: absolute; bottom: 1px; text-align: center; width: 100%">
 
-<p style="position: fixed; bottom: 30px; width:100%; text-align: center">
-    Enter the company stock tinker for ex: AAPL represents Apple. Enter no.of days you want to predict.
+    <div class="media-object" style="background-color: white">
+          <p>
+    Enter the company stock ticker for ex: AAPL represents Apple. Enter no.of days you want to predict.
 
     Prediction is done using 3 machine learning models - Prophet, Linear Regression, SVM
     You will get a plot showing the stock trends and list of predicted values for future dates</p>
+  </div>
 
+</div>
 
-</p>
 
 
 {% endblock %}

@@ -36,7 +36,7 @@ def get_stock_data(companyname):
 
     #Starting date provided. We are taking 1 year data as. of now
     start = datetime.datetime(2018, 1, 1)
-    end = datetime.datetime.today()
+    end = datetime.datetime(2018, 11, 6)
     data = fetch_data(companyname, start, end)
 
     return data
@@ -343,7 +343,7 @@ def predict():
 
         return render_template("graphing.html", graph_data=graph_data,
                                tables=[df.to_html()], svm_table=[df2.to_html()], linear_table=[linear.to_html()], \
-                               suggestion = suggestion, final_suggestion = final_suggestion, models = models, company=company)
+                               suggestion = suggestion, final_suggestion = final_suggestion, models = models, company = company)
 
     except Exception as e:
         return render_template("404.html", error=e)

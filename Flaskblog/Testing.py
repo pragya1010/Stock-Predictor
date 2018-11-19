@@ -17,13 +17,14 @@ from sklearn.linear_model import LinearRegression
 from app import svm_model, prophet_model, linear_regression
 
 
-start = datetime.datetime(2018, 4, 1)
-end = datetime.datetime(2018, 10, 31)
+start = datetime.datetime(2018, 1, 1)
+end = datetime.datetime(2018, 11, 12)
 
 df = pdb.DataReader('AAPL', 'yahoo', start, end)
 
 def test_svm_model(df):
-    graph_data_svm, df2, suggestion_svm, svm = svm_model(df, 5)
+    graph_data_svm, df2, suggestion_svm, svm = svm_model(df, 1)
+
     svm = svm.dropna()
     # print(svm)
 
@@ -37,7 +38,7 @@ def test_svm_model(df):
     return rmse, mape
 
 def test_prophet_model(df):
-    graph_data, df, suggestion_pro, d = prophet_model(df, 5)
+    graph_data, df, suggestion_pro, d = prophet_model(df, 1)
 
     actual_data = np.array(d[1].reset_index(drop = True).dropna())
     forecasted_data = np.array(d[2].reset_index(drop = True).dropna())
@@ -53,7 +54,7 @@ def test_prophet_model(df):
     #print("Root mean square error for SVM Model:" + str(rmse)) # For Apple data - 2.23
 
 def test_linear_model(df):
-    graph_data, linear, suggestion, error_df = linear_regression(df, 5)
+    graph_data, linear, suggestion, error_df = linear_regression(df, 1)
     se = np.square(error_df['Close'] - error_df['Act_forecast'])
     mse = np.mean(se)
     rmse = np.sqrt(mse)

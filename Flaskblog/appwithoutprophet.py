@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
 import pandas_datareader.data as pdb
-from fbprophet import Prophet
+
+#from fbprophet import Prophet
+
 import datetime
 from flask import Flask, render_template, url_for , make_response
 from flask import request, redirect
@@ -13,9 +15,8 @@ from sklearn.svm import SVR
 from sklearn import preprocessing, svm
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from collections import Counter
 import sys
-import requests
+
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -36,96 +37,86 @@ def get_stock_data(companyname):
 
     #Starting date provided. We are taking 1 year data as. of now
     start = datetime.datetime(2018, 1, 1)
-    end = datetime.datetime.today()
+    end = datetime.datetime(2018, 11, 2)
     data = fetch_data(companyname, start, end)
 
     return data
 
-def get_company(symbol):
-    url = "http://d.yimg.com/autoc.finance.yahoo.com/autoc?query={}&region=1&lang=en".format(symbol)
 
-    result = requests.get(url).json()
-
-    for x in result['ResultSet']['Result']:
-        if x['symbol'] == symbol:
-            return x['name']
-
-
-
-def prophet_model(stockhistory,num_days):
-    stock_data = stockhistory.filter(['Close'])
-
-    # Prophet would need a feature column ds. Hence creating a new column with name ds which is the Date feature.
-    stock_data['ds'] = stock_data.index
-
-    # log transform the ‘Close’ variable to convert non-stationary data to stationary.
-    stock_data['y'] = np.log(stock_data['Close'])
-
-    # Using the Prophet model for analysis
-    clf = Prophet()
-    clf.fit(stock_data)
-
-    ending_stock_price = stock_data['Close'][-1]
-
-    # num_days = 10
-    future = clf.make_future_dataframe(periods=num_days)
-    forecast = clf.predict(future)
-
-    #print(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
-
-    # Prophet plots the observed values of our time series (the black dots), the forecasted values (blue line) and
-    # the uncertainty intervalsof our forecasts (the blue shaded regions).
-
-    #forecast_plot = clf.plot(forecast)
-    #forecast_plot.show()
-
-    # make the vizualization a little better to understand
-    stock_data.set_index('ds', inplace=True)
-    forecast.set_index('ds', inplace=True)
-    # date = df['ds'].tail(plot_num)
-
-    stock_visual = stock_data.join(forecast[['yhat', 'yhat_lower', 'yhat_upper']], how='outer')
-    # Visualize the original values .. non logarithmic.
-    stock_visual['yhat_scaled'] = np.exp(stock_visual['yhat'])
-
-    actual_data = stock_visual.Close.apply(lambda x: round(x, 2))
-
-    forecasted_data = stock_visual.yhat_scaled.apply(lambda x: round(x, 2))
-
-    date = future['ds']
-
-    d = [date, actual_data, forecasted_data]
-
-    # predictions = pd.DataFrame(np.column_stack([date, actual_data, forecasted_data]), columns=['Date', 'Actual_Price','Predicted_Price'])
-
-    readcsvdata = zip_longest(*d, fillvalue='')
-    with open('predictions.csv', 'w', encoding="ISO-8859-1", newline='') as myfile:
-        wr = csv.writer(myfile)
-        wr.writerow(("Date", "Actual_price", "Forecasted_Price"))
-        wr.writerows(readcsvdata)
-    myfile.close()
-
-    graph = pygal.Line()
-    graph.title = '%Prophet Model%'
-    graph.x_labels = date
-    graph.add('Actual data', actual_data)
-    graph.add('Forecasted data', forecasted_data)
-    graph_data = graph.render_data_uri()
-
-    df = pd.read_csv('Predictions.csv')
-    df = df[['Date', 'Forecasted_Price']]
-    df = df[-num_days:]
-    df['Date_new'] = pd.to_datetime(df['Date'])
-    df['Future_date'] = df['Date_new'].dt.strftime('%Y-%m-%d')
-    df = df[['Future_date', 'Forecasted_Price']]
-    df.set_index('Future_date', inplace=True)
-
-    suggestion = "Buy" if df['Forecasted_Price'][0] > ending_stock_price  else "Sell"
-    # next_price = df['Forecasted_Price'][0]
-    # suggestion = "Buy" if ((next_price > ending_stock_price) and (next_price - ending_stock_price) > 1) else "Sell" \
-    #     if ((ending_stock_price > next_price) and (ending_stock_price - next_price) > 1) else "Hold"
-
-    return graph_data, df, suggestion, d
+# def prophet_model(stockhistory,num_days):
+#     stock_data = stockhistory.filter(['Close'])
+#
+#     # Prophet would need a feature column ds. Hence creating a new column with name ds which is the Date feature.
+#     stock_data['ds'] = stock_data.index
+#
+#     # log transform the ‘Close’ variable to convert non-stationary data to stationary.
+#     stock_data['y'] = np.log(stock_data['Close'])
+#
+#     # Using the Prophet model for analysis
+#     clf = Prophet()
+#     clf.fit(stock_data)
+#
+#     ending_stock_price = stock_data['Close'][-1]
+#
+#     # num_days = 10
+#     future = clf.make_future_dataframe(periods=num_days)
+#     forecast = clf.predict(future)
+#
+#     #print(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
+#
+#     # Prophet plots the observed values of our time series (the black dots), the forecasted values (blue line) and
+#     # the uncertainty intervalsof our forecasts (the blue shaded regions).
+#
+#     #forecast_plot = clf.plot(forecast)
+#     #forecast_plot.show()
+#
+#     # make the vizualization a little better to understand
+#     stock_data.set_index('ds', inplace=True)
+#     forecast.set_index('ds', inplace=True)
+#     # date = df['ds'].tail(plot_num)
+#
+#     stock_visual = stock_data.join(forecast[['yhat', 'yhat_lower', 'yhat_upper']], how='outer')
+#     # Visualize the original values .. non logarithmic.
+#     stock_visual['yhat_scaled'] = np.exp(stock_visual['yhat'])
+#
+#     actual_data = stock_visual.Close.apply(lambda x: round(x, 2))
+#
+#     forecasted_data = stock_visual.yhat_scaled.apply(lambda x: round(x, 2))
+#
+#     date = future['ds']
+#
+#     d = [date, actual_data, forecasted_data]
+#
+#     # predictions = pd.DataFrame(np.column_stack([date, actual_data, forecasted_data]), columns=['Date', 'Actual_Price','Predicted_Price'])
+#
+#     readcsvdata = zip_longest(*d, fillvalue='')
+#     with open('predictions.csv', 'w', encoding="ISO-8859-1", newline='') as myfile:
+#         wr = csv.writer(myfile)
+#         wr.writerow(("Date", "Actual_price", "Forecasted_Price"))
+#         wr.writerows(readcsvdata)
+#     myfile.close()
+#
+#     graph = pygal.Line()
+#     graph.title = '%Prophet Model%'
+#     graph.x_labels = date
+#     graph.add('Actual data', actual_data)
+#     graph.add('Forecasted data', forecasted_data)
+#     graph_data = graph.render_data_uri()
+#
+#     df = pd.read_csv('Predictions.csv')
+#     df = df[['Date', 'Forecasted_Price']]
+#     df = df[-num_days:]
+#     df['Date_new'] = pd.to_datetime(df['Date'])
+#     df['Future_date'] = df['Date_new'].dt.strftime('%Y-%m-%d')
+#     df = df[['Future_date', 'Forecasted_Price']]
+#     df.set_index('Future_date', inplace=True)
+#
+#     #suggestion = "Buy" if df['Forecasted_Price'][0] - ending_stock_price >1 else "Sell"
+#     next_price = df['Forecasted_Price'][0]
+#     suggestion = "Buy" if ((next_price > ending_stock_price) and (next_price - ending_stock_price) > 1) else "Sell" \
+#         if ((ending_stock_price > next_price) and (ending_stock_price - next_price) > 1) else "Hold"
+#
+#     return graph_data, df, suggestion, d
 
 def feature(df,date_column):
     df[date_column] = df[date_column].dt.strftime('%Y-%m-%d')
@@ -206,12 +197,12 @@ def svm_model(stockhistory,num_days):
     graph.add('Actual data', svm['Close'])
     graph.add('Forecasted data', svm['predictions'])
     graph_data = graph.render_data_uri()
-    suggestion = "Buy" if svm_future['predictions'][0] > svm_original['Close'][len(svm_original) - 1] else "Sell"
+    #suggestion = "Buy" if svm_future['predictions'][0] > svm_original['Close'][len(svm_original) - 1] else "Sell"
     # Compute suggestion
-    # next_price = svm_future['predictions'][0]
-    # ending_stock_price = svm_original['Close'][len(svm_original) - 1]
-    # suggestion = "Buy" if ((next_price > ending_stock_price) and (next_price - ending_stock_price) > 1) else "Sell" \
-    #     if ((ending_stock_price > next_price) and (ending_stock_price - next_price) > 1) else "Hold"
+    next_price = svm_future['predictions'][0]
+    ending_stock_price = svm_original['Close'][len(svm_original) - 1]
+    suggestion = "Buy" if ((next_price > ending_stock_price) and (next_price - ending_stock_price) > 1) else "Sell" \
+        if ((ending_stock_price > next_price) and (ending_stock_price - next_price) > 1) else "Hold"
 
     #Refactoring done for UI
     svm_future.index.names = ['Future_date']
@@ -284,11 +275,11 @@ def linear_regression(stockhistory, num_days):
     final_df = original.append(linear, sort=True)
 
     # Suggest whether to buy stock or sell. if predicted value is greater for tomorrow then buy
-    suggestion = "Buy" if linear['Act_forecast'][0] > stockhistory['Close'][len(stockhistory)-1] else "Sell"
-    # next_price = linear['Act_forecast'][0]
-    # ending_stock_price = stockhistory['Close'][len(stockhistory) - 1]
-    # suggestion = "Buy" if ((next_price > ending_stock_price) and (next_price - ending_stock_price) > 1) else "Sell" \
-    #     if ((ending_stock_price > next_price) and (ending_stock_price - next_price) > 1) else "Hold"
+    #suggestion = "Buy" if linear['Act_forecast'][0] > stockhistory['Close'][len(stockhistory)-1] else "Sell"
+    next_price = linear['Act_forecast'][0]
+    ending_stock_price = stockhistory['Close'][len(stockhistory) - 1]
+    suggestion = "Buy" if ((next_price > ending_stock_price) and (next_price - ending_stock_price) > 1) else "Sell" \
+        if ((ending_stock_price > next_price) and (ending_stock_price - next_price) > 1) else "Hold"
 
     # calculate mean square error
     error_df = final_df.dropna()
@@ -317,33 +308,19 @@ def predict():
     try:
         companyname = request.form['companyname']
         num_days = int(request.form['num_days'])
-
-
         print("Getting data for" + companyname)
 
         stockhistory = get_stock_data(companyname)
-        company = get_company(companyname)
 
-        graph_data_pro, df, suggestion_pro, d = prophet_model(stockhistory, num_days)
+        #graph_data, df, suggestion_pro, d = prophet_model(stockhistory, num_days)
         graph_data_svm, df2, suggestion_svm, svm = svm_model(stockhistory, num_days)
         graph_data_linear, linear, suggestion_linear, error_df = linear_regression(stockhistory, num_days)
 
-        suggestion = [suggestion_pro,suggestion_svm,suggestion_linear]
-        graph_data = [graph_data_pro,graph_data_svm,graph_data_linear]
-
-
-        final_suggestion, models = "Buy" if suggestion.count("Buy")>suggestion.count("Sell") else "Sell",\
-                       suggestion.count("Buy") if suggestion.count("Buy")>suggestion.count("Sell") else suggestion.count("Sell")
-
-        # return render_template("graphing.html", graph_data=graph_data, graph_data_svm=graph_data_svm,
-        #                        graph_data_linear=graph_data_linear, \
-        #                        tables=[df.to_html()], svm_table=[df2.to_html()], linear_table=[linear.to_html()], \
-        #                        suggestion_pro=suggestion_pro, suggestion_svm=suggestion_svm,
-        #                        suggestion_linear=suggestion_linear, company = company)
-
-        return render_template("graphing.html", graph_data=graph_data,
-                               tables=[df.to_html()], svm_table=[df2.to_html()], linear_table=[linear.to_html()], \
-                               suggestion = suggestion, final_suggestion = final_suggestion, models = models, company=company)
+        return render_template("graphing2.html",graph_data_svm=graph_data_svm,
+                               graph_data_linear=graph_data_linear, \
+                              svm_table=[df2.to_html()], linear_table=[linear.to_html()], \
+                               suggestion_svm=suggestion_svm,
+                               suggestion_linear=suggestion_linear)
 
     except Exception as e:
         return render_template("404.html", error=e)
