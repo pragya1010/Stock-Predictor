@@ -7,4 +7,5 @@ Linear Regression
 Support Vector Machine (SVM)
 
 
+The python scripts are present in the Flaskblog folder.
 The main driver code is app.py
